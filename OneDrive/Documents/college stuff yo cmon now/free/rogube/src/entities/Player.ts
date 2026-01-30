@@ -344,21 +344,38 @@ export default class Player extends Phaser.Physics.Arcade.Image {
         const velocityX = Math.cos(this.facingAngle) * this.shotSpeed;
         const velocityY = Math.sin(this.facingAngle) * this.shotSpeed;
         
-        // Create bullet at player position with velocity
-        const bullet1 = new Bullet(this.scene, this.x, this.y, velocityX, velocityY);
-        bullet1.setTint(0x00ff00); // Green for player bullets
-        bullet1.setDepth(9);
-        
-        // Enable homing if player has the upgrade
-        if (this.hasHoming && enemyGroup) {
-            bullet1.setHoming(true, enemyGroup);
-        }
-        
-        bulletGroup.add(bullet1);
-        
-        // If player has 20/20, shoot second bullet
+        // If player has 20/20, shoot two bullets with perpendicular offset
         if (this.hasTwentyTwenty) {
-            const bullet2 = new Bullet(this.scene, this.x, this.y, velocityX, velocityY);
+            const offsetDistance = 8; // Distance to offset bullets
+            // Perpendicular vector for offset (rotate 90 degrees)
+            const perpX = -Math.sin(this.facingAngle);
+            const perpY = Math.cos(this.facingAngle);
+            
+            // First bullet (offset to one side)
+            const bullet1 = new Bullet(
+                this.scene, 
+                this.x + perpX * offsetDistance, 
+                this.y + perpY * offsetDistance, 
+                velocityX, 
+                velocityY
+            );
+            bullet1.setTint(0x00ff00);
+            bullet1.setDepth(9);
+            
+            if (this.hasHoming && enemyGroup) {
+                bullet1.setHoming(true, enemyGroup);
+            }
+            
+            bulletGroup.add(bullet1);
+            
+            // Second bullet (offset to other side)
+            const bullet2 = new Bullet(
+                this.scene, 
+                this.x - perpX * offsetDistance, 
+                this.y - perpY * offsetDistance, 
+                velocityX, 
+                velocityY
+            );
             bullet2.setTint(0x00ff00);
             bullet2.setDepth(9);
             
@@ -367,6 +384,18 @@ export default class Player extends Phaser.Physics.Arcade.Image {
             }
             
             bulletGroup.add(bullet2);
+        } else {
+            // Single bullet (no 20/20)
+            const bullet1 = new Bullet(this.scene, this.x, this.y, velocityX, velocityY);
+            bullet1.setTint(0x00ff00); // Green for player bullets
+            bullet1.setDepth(9);
+            
+            // Enable homing if player has the upgrade
+            if (this.hasHoming && enemyGroup) {
+                bullet1.setHoming(true, enemyGroup);
+            }
+            
+            bulletGroup.add(bullet1);
         }
     }
 

@@ -1739,26 +1739,24 @@ export default class GameScene extends Phaser.Scene {
             costText.destroy();
         }
         
-        // Play item pickup sound (not for power button)
-        if (itemObj.getItemType() !== ItemType.POWER_BUTTON) {
-            const itemSound = this.sound.add('cymon_item');
-            itemSound.play({ volume: this.volumeCymonItem });
-            
-            // Fade out over last 200ms of the sound
-            this.time.delayedCall(itemSound.duration * 1000 - 200, () => {
-                if (itemSound.isPlaying) {
-                    this.tweens.add({
-                        targets: itemSound,
-                        volume: 0,
-                        duration: 200,
-                        onComplete: () => {
-                            itemSound.stop();
-                            itemSound.destroy();
-                        }
-                    });
-                }
-            });
-        }
+        // Play item pickup sound (including power button)
+        const itemSound = this.sound.add('cymon_item');
+        itemSound.play({ volume: this.volumeCymonItem });
+        
+        // Fade out over last 200ms of the sound
+        this.time.delayedCall(itemSound.duration * 1000 - 200, () => {
+            if (itemSound.isPlaying) {
+                this.tweens.add({
+                    targets: itemSound,
+                    volume: 0,
+                    duration: 200,
+                    onComplete: () => {
+                        itemSound.stop();
+                        itemSound.destroy();
+                    }
+                });
+            }
+        });
         
         itemObj.destroy();
         this.itemNameText.setVisible(false);
