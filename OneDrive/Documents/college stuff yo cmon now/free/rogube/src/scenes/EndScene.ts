@@ -10,7 +10,7 @@ export default class EndScene extends Phaser.Scene {
         this.load.audio('lose', 'sounds/lose.wav');
     }
 
-    create(data?: { wave?: number; weaponType?: 'gun' | 'sword' }) {
+    create(data?: { wave?: number; weaponType?: 'gun' | 'sword'; isEndlessMode?: boolean; endlessTotalKills?: number; endlessWave?: number }) {
         // Play lose sound
         this.sound.play('lose', { volume: 0.5 });
         const { width, height } = this.cameras.main;
@@ -19,7 +19,7 @@ export default class EndScene extends Phaser.Scene {
         this.cameras.main.setBackgroundColor(0x2d2d2d);
 
         // "You died" message
-        const deathMessage = this.add.text(width / 2, height / 2 - 80, 'You Died', {
+        const deathMessage = this.add.text(width / 2, height / 2 - 120, 'You Died', {
             fontSize: '64px',
             fontFamily: 'Tiny5',
             color: '#FF1100' // Bright red (same as enemy color)
@@ -27,19 +27,39 @@ export default class EndScene extends Phaser.Scene {
         deathMessage.setOrigin(0.5);
 
         // Wave reached message
+        let yPosition = height / 2 - 60;
         const waveReached = data?.wave || 1;
-        const waveText = this.add.text(width / 2, height / 2 - 20, `Wave reached: ${waveReached}`, {
+        const waveText = this.add.text(width / 2, yPosition, `Wave reached: ${waveReached}`, {
             fontSize: '32px',
             fontFamily: 'Tiny5',
             color: '#ffffff'
         });
         waveText.setOrigin(0.5);
+        
+        // Endless mode stats
+        if (data?.isEndlessMode) {
+            yPosition += 40;
+            const endlessWaveText = this.add.text(width / 2, yPosition, `Endless waves completed: ${(data?.endlessWave || 1) - 1}`, {
+                fontSize: '28px',
+                fontFamily: 'Tiny5',
+                color: '#ffffff'
+            });
+            endlessWaveText.setOrigin(0.5);
+            
+            yPosition += 35;
+            const totalKillsText = this.add.text(width / 2, yPosition, `Total endless kills: ${data?.endlessTotalKills || 0}`, {
+                fontSize: '28px',
+                fontFamily: 'Tiny5',
+                color: '#6ded8a' // Green highlight
+            });
+            totalKillsText.setOrigin(0.5);
+        }
 
-        // Play again button
+        // Play again button (adjust position based on endless mode)
         const buttonWidth = 250;
         const buttonHeight = 60;
         const buttonX = width / 2;
-        const buttonY = height / 2 + 60;
+        const buttonY = data?.isEndlessMode ? height / 2 + 90 : height / 2 + 60;
 
         // Play Again button background
         const playAgainBg = this.add.graphics();

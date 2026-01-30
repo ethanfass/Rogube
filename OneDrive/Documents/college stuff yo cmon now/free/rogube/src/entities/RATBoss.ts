@@ -313,6 +313,7 @@ class RATBoss extends Phaser.Physics.Arcade.Image {
     }
     
     private updateHomingBullets(time: number, bulletGroup: Phaser.GameObjects.Group) {
+        if (!bulletGroup) return; // Safety check
         const bullets = bulletGroup.getChildren();
         
         for (const bullet of bullets) {

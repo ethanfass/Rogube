@@ -7,6 +7,7 @@ export default class MimicEnemy extends Phaser.Physics.Arcade.Image {
     private knockbackTime: number = 0;
     private isChampion: boolean = false;
     private isMini: boolean = false; // Mini mimics from splitting
+    private sibling: MimicEnemy | null = null; // Link to sibling mini mimic
     private damageToPlayer: number = 1;
     private dropRateMultiplier: number = 1;
     private lastHitBySword1: number = 0;
@@ -419,10 +420,18 @@ export default class MimicEnemy extends Phaser.Physics.Arcade.Image {
         // Mini mimic 2 - offset to the right
         const mini2 = new MimicEnemy(this.scene, this.x + offsetDistance, this.y, false, true);
         
+        // Link the siblings together
+        mini1.sibling = mini2;
+        mini2.sibling = mini1;
+        
         // Add to scene's enemy group (we need to emit an event or store reference)
         // Store mini mimics as data so GameScene can pick them up
         this.setData('miniMimic1', mini1);
         this.setData('miniMimic2', mini2);
+    }
+    
+    getSibling(): MimicEnemy | null {
+        return this.sibling;
     }
 
     destroy() {
