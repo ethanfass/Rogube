@@ -53,7 +53,7 @@ export default class GameScene extends Phaser.Scene {
     private endlessTotalKills: number = 0;
     private endlessKillsText!: Phaser.GameObjects.Text;
     private endlessBosses: RATBoss[] = [];
-    private endlessBossSpawnPositions: number[] = []; // Tracks at which enemy count each boss spawns
+    private endlessBossSpawnPositions: number[] = [];
     private buttonShakeTweenX?: Phaser.Tweens.Tween;
     private buttonShakeTweenY?: Phaser.Tweens.Tween;
     
@@ -402,29 +402,24 @@ export default class GameScene extends Phaser.Scene {
             this.checkSwordEnemyCollision();
         }
 
-        // Only spawn enemies if wave is active and NOT a boss round
-        // In endless mode, always spawn (bosses are present but don't block enemy spawning)
+        // Spawn enemies during wave (endless mode spawns enemies + boss simultaneously)
         if (this.waveActive && (!this.isBossRound || this.isEndlessMode)) {
             if (time - this.lastEnemySpawn > this.enemySpawnInterval) {
                 this.spawnRandomEnemy();
                 this.lastEnemySpawn = time;
                 
-                // In endless mode, check if we should spawn a boss
+                // Spawn boss at designated enemy count in endless mode
                 if (this.isEndlessMode && this.endlessBossSpawnPositions.length > 0) {
-                    // Check if current spawn count matches a boss spawn position
                     if (this.enemiesSpawnedThisWave === this.endlessBossSpawnPositions[0]) {
-                        // Remove this spawn position from the queue
                         this.endlessBossSpawnPositions.shift();
-                        // Spawn a boss with warning
                         this.spawnSingleEndlessBoss();
                     }
                 }
             }
         }
         
-        // Update boss(es) if active
+        // Update endless bosses
         if (this.isEndlessMode && this.endlessBosses.length > 0) {
-            // Update all endless bosses
             this.endlessBosses.forEach((boss) => {
                 if (boss && boss.active) {
                     boss.update(time, this.player, this.enemyBullets);
@@ -472,10 +467,8 @@ export default class GameScene extends Phaser.Scene {
                 }
             });
             
-            // Remove dead bosses from array
             this.endlessBosses = this.endlessBosses.filter(boss => boss && boss.active);
             
-            // Update boss reference and health bar
             if (this.endlessBosses.length > 0) {
                 this.boss = this.endlessBosses[0];
                 this.updateBossHealthBar();
@@ -484,7 +477,6 @@ export default class GameScene extends Phaser.Scene {
                 this.hideBossHealthBar();
             }
         } else if (this.boss && this.boss.active) {
-            // Normal boss mode
             this.boss.update(time, this.player, this.enemyBullets);
             this.updateBossHealthBar();
             
@@ -1114,16 +1106,15 @@ export default class GameScene extends Phaser.Scene {
                     this.spawnHitParticles(enemyParticleX, enemyParticleY, -dx, -dy, dropRateMultiplier === 2);
                     const mimicEnemy = enemy as MimicEnemy;
                     mimicEnemy.takeDamage(damage, (x: number, y: number) => {
-                        // Check if mini mimics were spawned and add them to enemies group
+                        // Add mini mimics to enemies group
                         const mini1 = mimicEnemy.getData('miniMimic1');
                         const mini2 = mimicEnemy.getData('miniMimic2');
                         if (mini1) this.enemies.add(mini1);
                         if (mini2) this.enemies.add(mini2);
                         
-                        // Only count as kill if it's a mini mimic AND its sibling is already dead
+                        // Mini mimics: only give kill credit when both are dead
                         if (mimicEnemy.isMiniMimic()) {
                             const sibling = mimicEnemy.getSibling();
-                            // Give kill credit only if sibling is dead/destroyed or doesn't exist
                             if (!sibling || !sibling.active) {
                                 this.onEnemyDeath(x, y, dropRateMultiplier);
                             }
@@ -1294,16 +1285,14 @@ export default class GameScene extends Phaser.Scene {
             this.spawnHitParticles(particleX, particleY, -bulletDirX, -bulletDirY, dropRateMultiplier === 2);
             const mimicEnemy = enemy as MimicEnemy;
             mimicEnemy.takeDamage(damage, (x: number, y: number) => {
-                // Check if mini mimics were spawned and add them to enemies group
                 const mini1 = mimicEnemy.getData('miniMimic1');
                 const mini2 = mimicEnemy.getData('miniMimic2');
                 if (mini1) this.enemies.add(mini1);
                 if (mini2) this.enemies.add(mini2);
                 
-                // Only count as kill if it's a mini mimic AND its sibling is already dead
+                // Mini mimics: only give kill credit when both are dead
                 if (mimicEnemy.isMiniMimic()) {
                     const sibling = mimicEnemy.getSibling();
-                    // Give kill credit only if sibling is dead/destroyed or doesn't exist
                     if (!sibling || !sibling.active) {
                         this.onEnemyDeath(x, y, dropRateMultiplier);
                     }
@@ -1527,30 +1516,25 @@ export default class GameScene extends Phaser.Scene {
         this.hideBossHealthBar();
         
         if (this.isEndlessMode) {
-            // In endless mode, boss doesn't drop power button
             this.boss = null;
-            // Count boss as 5 kills
             this.endlessTotalKills += 5;
             this.killsThisWave += 5;
             this.updateEndlessKillsDisplay();
             this.updateWaveIndicator();
             
-            // Check if endless wave is complete
             if (this.killsThisWave >= this.killsNeeded) {
                 this.completeEndlessWave();
             }
         } else {
-            // First boss defeat - show choice between victory and endless
+            // Wave 8: Spawn power button and show endless option
             this.boss = null;
             
-            // Spawn Power Button item in center
-            const centerX = this.mapWidth / 2 + 5; // Slight offset to the right
+            const centerX = this.mapWidth / 2 + 5;
             const centerY = this.mapHeight / 2;
             const powerButton = new Item(this, centerX, centerY, ItemType.POWER_BUTTON);
             powerButton.setDepth(8);
             this.items.add(powerButton);
             
-            // Show Endless? button
             this.showEndlessButton();
         }
     }
@@ -2541,7 +2525,6 @@ export default class GameScene extends Phaser.Scene {
     }
     
     private startEndlessMode() {
-        // Stop button shake
         if (this.buttonShakeTweenX) {
             this.buttonShakeTweenX.stop();
             this.buttonShakeTweenX = undefined;
@@ -2551,7 +2534,6 @@ export default class GameScene extends Phaser.Scene {
             this.buttonShakeTweenY = undefined;
         }
         
-        // Remove power button if it exists
         this.items.children.entries.forEach((item) => {
             const itemObj = item as Item;
             if (itemObj.getItemType() === ItemType.POWER_BUTTON) {
@@ -2559,28 +2541,20 @@ export default class GameScene extends Phaser.Scene {
             }
         });
         
-        // Set endless mode flags
         this.isEndlessMode = true;
         this.endlessWave = 1;
         this.endlessTotalKills = 0;
         
-        // Create endless kills display
         this.createEndlessKillsDisplay();
-        
-        // Hide button and start first endless wave
         this.hideStartWaveButton();
         this.startEndlessWave();
     }
     
     private startEndlessWave() {
-        // Calculate requirements for this endless wave
         const killsRequired = 100 * Math.pow(2, this.endlessWave - 1); // 100, 200, 400, 800...
-        const numBosses = 1; // Always spawn 1 R.A.T. per endless wave
+        const numBosses = 1;
         
-        // Calculate when each boss should spawn (spread evenly across first half of kills needed)
-        // E.g., for EW1 (100 kills, 1 boss): spawn at enemy 25
-        // E.g., for EW2 (200 kills, 2 bosses): spawn at enemy 50 and 100
-        // E.g., for EW3 (400 kills, 3 bosses): spawn at enemy 67, 133, 200
+        // Boss spawns at halfway point (e.g., enemy #50 for EW1, #100 for EW2)
         const halfKills = killsRequired / 2;
         const spacing = halfKills / numBosses;
         this.endlessBossSpawnPositions = [];
@@ -2588,33 +2562,26 @@ export default class GameScene extends Phaser.Scene {
             this.endlessBossSpawnPositions.push(Math.floor(spacing * (i + 1)));
         }
         
-        // Set spawn rate (halves each wave, starting from wave 7's rate)
-        // Wave 7 has 1000ms interval, so endless 1 = 500ms, endless 2 = 250ms, etc.
-        const wave7Interval = 1000; // Wave 7's actual interval
+        // Enemy spawn rate doubles each wave (EW1: 500ms, EW2: 250ms, EW3: 125ms...)
+        const wave7Interval = 1000;
         this.enemySpawnInterval = wave7Interval / Math.pow(2, this.endlessWave);
         
-        // Reset spawn timer
         this.lastEnemySpawn = this.time.now;
-        
-        // Start wave
         this.waveActive = true;
         this.killsThisWave = 0;
         this.killsNeeded = killsRequired;
         this.enemiesSpawnedThisWave = 0;
-        this.enemyPool = []; // Will spawn randomly
-        this.isBossRound = false; // Not a boss round in endless mode (bosses + enemies)
+        this.enemyPool = [];
+        this.isBossRound = false;
         
-        // Update wave indicator
         this.waveIndicatorText.setText(`Endless ${this.endlessWave} - ${this.killsThisWave}/${this.killsNeeded}`);
     }
     
     private spawnSingleEndlessBoss() {
-        // Show 3 large "!" in center of map that blink 3 times
         const centerX = this.mapWidth / 2;
         const centerY = this.mapHeight / 2;
         const spacing = 45;
         
-        // Create 3 warnings
         const warning1 = this.add.text(centerX - spacing, centerY, '!', {
             fontSize: '172px',
             fontFamily: 'Tiny5',
@@ -2642,7 +2609,6 @@ export default class GameScene extends Phaser.Scene {
         warning3.setDepth(200);
         warning3.setAlpha(0);
         
-        // Blink 3 times
         const blinkDuration = 200;
         const blinkCount = 3;
         
@@ -2660,24 +2626,16 @@ export default class GameScene extends Phaser.Scene {
             });
         }
         
-        // After blinking, spawn a single boss and destroy warnings
         this.time.delayedCall(blinkCount * blinkDuration * 2, () => {
             warning1.destroy();
             warning2.destroy();
             warning3.destroy();
             
-            // Spawn RAT boss at center of map (where warnings appeared)
-            const ratBoss = new RATBoss(
-                this, 
-                centerX, 
-                centerY
-            );
+            const ratBoss = new RATBoss(this, centerX, centerY);
             ratBoss.setPlayer(this.player);
             this.enemies.add(ratBoss);
             this.endlessBosses.push(ratBoss);
             
-            // Show boss health bar now that boss is spawned
-            // Set to first active boss
             const firstActiveBoss = this.endlessBosses.find(b => b && b.active);
             if (firstActiveBoss) {
                 this.boss = firstActiveBoss;
