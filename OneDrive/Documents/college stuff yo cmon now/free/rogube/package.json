@@ -1,0 +1,22 @@
+{
+  "name": "rogube",
+  "version": "1.0.0",
+  "description": "A Binding of Isaac inspired 2D roguelike shooter",
+  "main": "index.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
+  },
+  "keywords": ["game", "phaser", "typescript"],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "typescript": "^5.3.0",
+    "vite": "^5.0.0"
+  },
+  "dependencies": {
+    "phaser": "^3.70.0"
+  }
+}
